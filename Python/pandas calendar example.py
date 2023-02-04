@@ -48,15 +48,21 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     series = group.mean() if mean else group.sum()
 
     # Parse start/end, defaulting to the min/max of the index.
+    # start is a function argument, in the 'start or series.index.min()' statement, python will first try to find start and check if it is None (or False), if it is, it will then do the 'series.index.min()' part. If 'start' is populated, then it will use 'start' as the value. The 'or' acts as a way of setting a default value in this case.
+    # Would a better way be putting 'series.index.min()' as the argument default in the def() statement?
     start = pd.to_datetime(start or series.index.min())
     end = pd.to_datetime(end or series.index.max())
 
     # We use [start, end) as a half-open interval below.
+    # Adding one day to the 'end' date as the code later does not actually include the end but uses it as a stopping point. [] <-- means included, () <-- means excluded.
     end += np.timedelta64(1, 'D')
 
     # Get the previous/following Sunday to start/end.
     # Pandas and numpy day-of-week conventions are Monday=0 and Sunday=6.
-    start_sun = start - np.timedelta64((start.dayofweek + 1) % 7, 'D')
+    # This function treats sunday as the first day of the week. DatetimeObject.dayofweek will bring back a number 0-6 to specify what day of week it is. Monday = 0, so this person uses the modulo formula to find the starting sunday, even if it is not in range within the numerical data.
+    # Pretty sure you can delete the '% 7' as it does not change the answer.
+    start_sun = start - np.timedelta64((start.dayofweek + 1), 'D')
+
     end_sun = end + np.timedelta64(7 - end.dayofweek - 1, 'D')
 
     # Create the heatmap and track ticks.
