@@ -66,16 +66,27 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     end_sun = end + np.timedelta64(7 - end.dayofweek - 1, 'D')
 
     # Create the heatmap and track ticks.
+    # Integer division so there's no decimals when creating the plot.
     num_weeks = (end_sun - start_sun).days // 7
+    # np.zeros creates an array of size x, y and fills it all with 0s.
     heatmap = np.zeros((7, num_weeks))
+
     ticks = {}  # week number -> month name
+    # Loop through this code for the number of weeks calculated in num_weeks.
     for week in range(num_weeks):
+        # using range 7 (0-6) as we know that 0-6 is the weekday index in datetimeObject.dayofweek.
         for day in range(7):
+            # Setting the date in each loop by adding a week to it each time.
             date = start_sun + np.timedelta64(7 * week + day, 'D')
+            # date.day brings back the day number of the month. E.g. 14th Dec would bring back 14.
+            # If the day of the month is the 1st, add the week number to the dictionary as the key, and set the value to the previous month. We set the value to the previous month because e.g. if we start the loop in janurary, the first month it gets to is Feb, so we want to label the looped through Jan as Jan.
+            # date.month brings back the month number.
             if date.day == 1:
                 ticks[week] = MONTHS[date.month - 1]
+            # if the dayofyear (1st Jan = 1), change the value of the week to "week number + year"
             if date.dayofyear == 1:
                 ticks[week] += f'\n{date.year}'
+            # if the date is more than the start date and less than the end date, then in the heatmap array that currently contains zeros, add the value from the dataset to populate the heatmap with series.get(date_to_get, )
             if start <= date < end:
                 heatmap[day, week] = series.get(date, 0)
 
