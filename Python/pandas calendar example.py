@@ -69,6 +69,7 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     # Integer division so there's no decimals when creating the plot.
     num_weeks = (end_sun - start_sun).days // 7
     # np.zeros creates an array of size x, y and fills it all with 0s.
+    # Passing a list of values to np.zeros() will create arrays within the array, e.g. for np.zeros((5, 10)), within the array, there will be 5 other arrarys, each with 10 values, all set to 0.
     heatmap = np.zeros((7, num_weeks))
 
     ticks = {}  # week number -> month name
@@ -88,6 +89,7 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
                 ticks[week] += f'\n{date.year}'
             # if the date is more than the start date and less than the end date, then in the heatmap array that currently contains zeros, add the value from the dataset to populate the heatmap with series.get(date_to_get, )
             if start <= date < end:
+                # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0 refers to the column, since the array is date indexed and only has one other column (the value column), that means 0 is the value column.
                 heatmap[day, week] = series.get(date, 0)
 
     # Get the coordinates, offset by 0.5 to align the ticks.
