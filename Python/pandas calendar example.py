@@ -8,6 +8,13 @@ DAYS = ['Sun.', 'Mon.', 'Tues.', 'Wed.', 'Thurs.', 'Fri.', 'Sat.']
 MONTHS = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June',
           'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.']
 
+# series is the data, it needs to be a np/pd series object.
+# start = start date, leaving it blank will take the ealriest date from the series.
+# end = end date, leaving it blank will take the ealriest date from the series.
+# set mean to True to average the data, leave it to Flase to sum the data across dates.
+# ax = the plot, if you need to add this chart to an existing ax then set it here.
+# kwargs are the kwargs for the plt.pcolormesh() method
+
 
 def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     '''Plot a calendar heatmap given a datetime series.
@@ -89,18 +96,22 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
                 ticks[week] += f'\n{date.year}'
             # if the date is more than the start date and less than the end date, then in the heatmap array that currently contains zeros, add the value from the dataset to populate the heatmap with series.get(date_to_get, )
             if start <= date < end:
-                # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0 refers to the column, since the array is date indexed and only has one other column (the value column), that means 0 is the value column.
+                # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0) is the value that is returned if it cannot find the date (e.g. IFERROR(VLOOKUP(), 0))
                 heatmap[day, week] = series.get(date, 0)
 
     # Get the coordinates, offset by 0.5 to align the ticks.
+    # 'np.arange' returns evenly spaced values within a given interval. The value is 8 because it indexes from 0, so 8 will bring back 7 values, one for each day of the week.
     y = np.arange(8) - 0.5
     x = np.arange(num_weeks + 1) - 0.5
 
     # Plot the heatmap. Prefer pcolormesh over imshow so that the figure can be
     # vectorized when saved to a compatible format. We must invert the axis for
     # pcolormesh, but not for imshow, so that it reads top-bottom, left-right.
+    # plt.gca() = 'get current axes'. Get the current Axes instance on the current figure matching the given keyword args, or create one. So if there is no ax argument in the function, use plt.gca()
     ax = ax or plt.gca()
+    # ax.pcolormesh() creates a pseudocolor plot with a non-regular rectangular grid. x = number of weeks - horizontwal length, y = number of days - vertical height, c (heatmap) argument is the colour mapping. There are several keyword arguments (kwargs) fore this method e.g. shading='nearest.
     mesh = ax.pcolormesh(x, y, heatmap, **kwargs)
+    # inverting the y-axis so ax.pcolormesh reads it the right way round
     ax.invert_yaxis()
 
     # Set the ticks.
@@ -110,7 +121,9 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     ax.set_yticklabels(DAYS)
 
     # Set the current image and axes in the pyplot API.
+    # sca = set current axes
     plt.sca(ax)
+    # sci = Set the current image. This image will be the target of colormap functions like pyplot.viridis, and other functions such as clim.
     plt.sci(mesh)
 
     return ax
