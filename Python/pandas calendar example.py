@@ -8,6 +8,11 @@ DAYS = ['Sun.', 'Mon.', 'Tues.', 'Wed.', 'Thurs.', 'Fri.', 'Sat.']
 MONTHS = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June',
           'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.']
 
+tick_weeks = [1, 6, 10, 14, 19, 23, 27, 32, 36, 40, 45, 49]
+tick_labels = ["Period " + str(num) for num in range(1, 13)]
+manual_ticks = dict(zip(tick_weeks, tick_labels))
+
+
 # series is the data, it needs to be a np/pd series object.
 # start = start date, leaving it blank will take the ealriest date from the series.
 # end = end date, leaving it blank will take the ealriest date from the series.
@@ -15,8 +20,8 @@ MONTHS = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June',
 # ax = the plot, if you need to add this chart to an existing ax then set it here.
 # kwargs are the kwargs for the plt.pcolormesh() method
 
-
-def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
+# Add "specified ticks" to the argument
+def date_heatmap(series, start=None, end=None, mean=False, tick_labels=None, ax=None, **kwargs):
     '''Plot a calendar heatmap given a datetime series.
 
     Arguments:
@@ -79,25 +84,34 @@ def date_heatmap(series, start=None, end=None, mean=False, ax=None, **kwargs):
     # Passing a list of values to np.zeros() will create arrays within the array, e.g. for np.zeros((5, 10)), within the array, there will be 5 other arrarys, each with 10 values, all set to 0.
     heatmap = np.zeros((7, num_weeks))
 
-    ticks = {}  # week number -> month name
-    # Loop through this code for the number of weeks calculated in num_weeks.
-    for week in range(num_weeks):
-        # using range 7 (0-6) as we know that 0-6 is the weekday index in datetimeObject.dayofweek.
-        for day in range(7):
-            # Setting the date in each loop by adding a week to it each time.
-            date = start_sun + np.timedelta64(7 * week + day, 'D')
-            # date.day brings back the day number of the month. E.g. 14th Dec would bring back 14.
-            # If the day of the month is the 1st, add the week number to the dictionary as the key, and set the value to the previous month. We set the value to the previous month because e.g. if we start the loop in janurary, the first month it gets to is Feb, so we want to label the looped through Jan as Jan.
-            # date.month brings back the month number.
-            if date.day == 1:
-                ticks[week] = MONTHS[date.month - 1]
-            # if the dayofyear (1st Jan = 1), change the value of the week to "week number + year"
-            if date.dayofyear == 1:
-                ticks[week] += f'\n{date.year}'
-            # if the date is more than the start date and less than the end date, then in the heatmap array that currently contains zeros, add the value from the dataset to populate the heatmap with series.get(date_to_get, )
-            if start <= date < end:
-                # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0) is the value that is returned if it cannot find the date (e.g. IFERROR(VLOOKUP(), 0))
-                heatmap[day, week] = series.get(date, 0)
+    if tick_labels == None:
+        ticks = {}  # week number -> month name
+        # Loop through this code for the number of weeks calculated in num_weeks.
+        for week in range(num_weeks):
+            # using range 7 (0-6) as we know that 0-6 is the weekday index in datetimeObject.dayofweek.
+            for day in range(7):
+                # Setting the date in each loop by adding a week to it each time.
+                date = start_sun + np.timedelta64(7 * week + day, 'D')
+                # date.day brings back the day number of the month. E.g. 14th Dec would bring back 14.
+                # If the day of the month is the 1st, add the week number to the dictionary as the key, and set the value to the previous month. We set the value to the previous month because e.g. if we start the loop in janurary, the first month it gets to is Feb, so we want to label the looped through Jan as Jan.
+                # date.month brings back the month number.
+                if date.day == 1:
+                    ticks[week] = MONTHS[date.month - 1]
+                # if the dayofyear (1st Jan = 1), change the value of the week to "week number + year"
+                if date.dayofyear == 1:
+                    ticks[week] += f'\n{date.year}'
+                # if the date is more than the start date and less than the end date, then in the heatmap array that currently contains zeros, add the value from the dataset to populate the heatmap with series.get(date_to_get, )
+                if start <= date < end:
+                    # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0) is the value that is returned if it cannot find the date (e.g. IFERROR(VLOOKUP(), 0))
+                    heatmap[day, week] = series.get(date, 0)
+
+    else:
+        ticks = tick_labels
+        for week in range(num_weeks):
+            for day in range(7):
+                date = start_sun + np.timedelta64(7 * week + day, 'D')
+                if start <= date < end:
+                    heatmap[day, week] = series.get(date, 0)
 
     # Get the coordinates, offset by 0.5 to align the ticks.
     # 'np.arange' returns evenly spaced values within a given interval. The value is 8 because it indexes from 0, so 8 will bring back 7 values, one for each day of the week.
