@@ -105,6 +105,11 @@ def date_heatmap(series, start=None, end=None, mean=False, tick_labels=None, ax=
                     # since heatmap is an array with 7 sub arrays (one for each day of week), We can replace the zero at the day, week position, with the value from the series (the average/sum of the date specified). The 0 in series.get(date, 0) is the value that is returned if it cannot find the date (e.g. IFERROR(VLOOKUP(), 0))
                     heatmap[day, week] = series.get(date, 0)
 
+    # Get the coordinates, offset by 0.5 to align the ticks.
+    # 'np.arange' returns evenly spaced values within a given interval. The value is 8 because it indexes from 0, so 8 will bring back 7 values, one for each day of the week.
+        y = np.arange(8) - 0.5
+        x = np.arange(num_weeks + 1) - 0.5
+
     else:
         ticks = tick_labels
         for week in range(num_weeks):
@@ -115,8 +120,8 @@ def date_heatmap(series, start=None, end=None, mean=False, tick_labels=None, ax=
 
     # Get the coordinates, offset by 0.5 to align the ticks.
     # 'np.arange' returns evenly spaced values within a given interval. The value is 8 because it indexes from 0, so 8 will bring back 7 values, one for each day of the week.
-    y = np.arange(8) - 0.5
-    x = np.arange(num_weeks + 1) - 0.5
+        y = np.arange(8)
+        x = np.arange(num_weeks + 1)
 
     # Plot the heatmap. Prefer pcolormesh over imshow so that the figure can be
     # vectorized when saved to a compatible format. We must invert the axis for
@@ -160,7 +165,7 @@ def date_heatmap_demo():
     fig = plt.figure(figsize=figsize)
 
     # Plot the heatmap with a color bar.
-    ax = date_heatmap(data, edgecolor='black')
+    ax = date_heatmap(data, edgecolor='black', tick_labels=manual_ticks)
     plt.colorbar(ticks=range(5), pad=0.02)
 
     # Use a discrete color map with 5 colors (the data ranges from 0 to 4).
